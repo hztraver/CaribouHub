@@ -34,40 +34,58 @@ for (layer in lichen.layers){
 ## Sum the 900 m layers to get overall percent cover in total, summer and winter range
 ## for each time period
 dir.900m = "E:/Caribou/lichen_clipped/aggregate_1km/"
-list.900m = list.files("E:/Caribou/lichen_clipped/aggregate_1km/")
+list.900m = list.files(path = "E:/Caribou/lichen_clipped/aggregate_1km/", pattern = "*.tif$")
 time.periods = c("1985", "1990", "1995", "2000", "2005", "2010", "2015", "2020")
 
-# Calculate total area of ranges (tota, summer, winter) in km2
-total.range.area = expanse(rast(paste0(dir.900m, "totalrange_LichenLight_1985_900m.tif")), unit = "km")$area 
-summer.area = expanse(rast(paste0(dir.900m, "summerrange_LichenLight_1985_900m.tif")), unit = "km")$area 
-winter.area = expanse(rast(paste0(dir.900m, "winterrange_LichenLight_1985_900m.tif")), unit = "km")$area 
+## Combine range shapefiles into one 
+summer = vect("E:/Caribou/lichen_clipped/projected_range/summer_range_macander.shp")
+winter = vect("E:/Caribou/lichen_clipped/projected_range/winter_range_macander.shp")
+total = vect("E:/Caribou/lichen_clipped/projected_range/total_range_macander.shp")
 
-range.area = c(total.range.area, summer.area, winter.area)
+range = rbind(total, summer, winter)
+range$RANGE = c("Total", "Summer", "Winter")
+
+# Calculate total area of ranges (tota, summer, winter) in km2
+range.area = data.frame(Range = range$RANGE, Area_km2 = expanse(range, unit = "km"))
 
 # Write the total percent cover to a data frame
-dt = data.frame(range = c("total", "summer", "winter"), area_km2 = range.area)
+dt = range.area
+
+# Note that an alternative method to get means across different ranges is use terra:zonal(fun = "mean") 
+# with the raster & range boundary polygon, instead of writing the raster values to a data.table.
+# but the zonal method is slower because calculating a mean on a raster is much slower than operations on a data.table
 
 for (time in time.periods) {
   
   print(time)
   
-  # Percent cover maps for summer range, total range, winter range (in that order)
+  # Percent cover layers for summer range, total range, winter range (in that order)
   layers = grep(time, list.900m, value = T)
   
+  # get the raster of percent cover for total range
+  # extract values as a data.table and calculate a mean
   total = rast(paste0(dir.900m, layers[2])) %>% values() %>% na.omit() %>% as.data.table()
   percent.total = mean(total$cover)
   
+  # summer range mean percent cover 
   summer = rast(paste0(dir.900m, layers[1])) %>% values() %>% na.omit() %>% as.data.table()
   percent.summer = mean(summer$cover)
   
+  # winter range mean percent cover
   winter = rast(paste0(dir.900m, layers[3])) %>% values() %>% na.omit() %>% as.data.table()
   percent.winter = mean(winter$cover)
   
+  # stack mean cover values and append to data table 
   percent.cover = c(percent.total, percent.summer, percent.winter)
   out = data.frame(percent.cover)
   out = set_names(out, paste0("percent_cover_", time))
   dt = cbind(dt, out)
+  
+  # clear memory 
+  gc(verbose = F)
 }
 
 dt
 write.csv(dt, "E:/Caribou/lichen_clipped/lichen_percent_change.csv")
+
+#### Visualize change in 900 m pixels 
