@@ -6,8 +6,6 @@ library(magrittr)
 dir = "I:/PFT_FMCH range/"
 layers = list.files(dir, pattern = "*.tif$")
 
-l2010 = rast("I:/PFT_FMCH range/PFT_masked_2005.tif")
-
 ## aggregate to 900m 
 for (layer in layers){
   
@@ -45,3 +43,10 @@ for (year in years) {
 }
 
 write.csv(dt, "I:/PFT_FMCH range/total_percent_cover.csv")
+
+diff = rast("I:/PFT_FMCH range/PFT_masked_2020_900m.tif") - rast("I:/PFT_FMCH range/PFT_masked_2005_900m.tif")
+diff$Shrub = diff$DeciduousShrub + diff$EvergreenShrub
+diff$Tree = diff$BroadleafTree + diff$ConiferTree
+diff$Herbs = diff$Forb + diff$Graminoid + diff$tmLichenLight
+
+writeRaster(diff, "I:/PFT_FMCH range/PFT_difference_2020_2005.tif")
