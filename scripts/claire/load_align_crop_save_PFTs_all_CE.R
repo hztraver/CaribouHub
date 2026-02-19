@@ -21,13 +21,27 @@ if (!dir.exists(output_dir)) dir.create(output_dir)
 
 # Load shapefile
 FMCH_range <- st_read("Fortymile_Caribou_Expanded_Range_2013-2014_Final.shp")
+FMCH_range_historic <- st_read("HistoricRangeArea.shp")
 
-# Grab Target CRS from one 2005 file (to ensure perfect alignment)
+# Grab Target CRS from one 2005 file (to ensure alignment)
 sample_file <- list.files(path = "ABoVE_PFT_2005", pattern = "\\.tif$", full.names = TRUE)[1]
 target_crs  <- crs(rast(sample_file))
 
 # Align shapefile to Raster CRS and convert to SpatVector for {terra}
 FMCH_vect <- vect(st_transform(FMCH_range, target_crs))
+FMCH_vect_historic <- vect(st_transform(FMCH_range_historic, target_crs))
+# Save aligned FMCH range .shp
+# Define the specific save location
+save_path <- "C:/Users/caeth/Documents/Data/FMCH range shapefiles (from Mike Suitor)"
+
+# Define the full filename
+output_file <- file.path(save_path, "FMCH_Range_ABoVE_Aligned.shp")
+output_historic_file <- file.path(save_path, "FMCH_Range_Historic_ABoVE_Aligned.shp")
+
+# Save the transformed SpatVector
+writeVector(FMCH_vect, output_file, overwrite = TRUE)
+writeVector(FMCH_vect_historic, output_historic_file, overwrite = TRUE)
+
 
 # --- 3. DEFINE PROCESSING FUNCTION ---
 
