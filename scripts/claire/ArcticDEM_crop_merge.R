@@ -59,3 +59,41 @@ for(i in 1:nrow(files)){
   
   if(file.exists(tf)) unlink(tf) # Clean up temp tarball
 }
+
+# --- 4. MOSAIC, PROJECT, & CLIP ---
+library(terra)
+
+# 1. List all the extracted DEM tiles
+tif_list <- list.files(tile_dir, pattern = "_dem.tif$", full.names = TRUE)
+
+# 2. Create a Virtual Raster (VRT) 
+# This "links" the tiles without using massive amounts of RAM
+v_native <- vrt(tif_list, "FMCH_native_vrt.vrt", overwrite = TRUE)
+
+# 3. Project and Clip to the FMCH_range
+# We do this in one step using the 'mask' and 'crop' functions
+message("Projecting and clipping DEM to the FMCH range...")
+
+# Define target CRS (from your Albers shapefile)
+target_crs <- st_crs(FMCH_range)$wkt
+
+# A. Project the whole mosaic to Canada Albers
+dem_albers <- project(v_native, target_crs, method = "bilinear")
+
+# B. Crop to the bounding box of the range
+dem_cropped <- crop(dem_albers, vect(FMCH_range))
+
+# C. Mask to the exact shape of the range (sets area outside range to NA)
+dem_final <- mask(dem_cropped, vect(FMCH_range))
+plot(dem_final)
+
+# --- 5. CALCULATE TERRAIN & SAVE ---
+
+message("Calculating slope and aspect for the clipped area...")
+terrain_stack <- c(dem_final, terrain(dem_final, v = c("slope", "aspect")))
+names(terrain_stack) <- c("elevation", "slope", "aspect")
+
+# Save the final product
+writeRaster(terrain_stack, "FMCH_ArcticDEM_Clipped_Albers.tif", overwrite = TRUE)
+
+print("Processing complete! Your DEM is now aligned with your caribou range and ABoVE data.")
