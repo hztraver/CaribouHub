@@ -3,7 +3,7 @@ library(dplyr)
 library(data.table)
 library(magrittr)
 
-#### SUMMARY STATISTICS FOR TOTAL PERCENT LICHEN COVER ####
+#### SUMMARY STATISTICS FOR TOTAL PFT COVER ####
 #### Calculate overall percent cover in total,  summer and winter range 
 
 # Folder of lichen percent cover 30 m layers
