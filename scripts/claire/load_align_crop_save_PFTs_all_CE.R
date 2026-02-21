@@ -42,7 +42,6 @@ output_historic_file <- file.path(save_path, "FMCH_Range_Historic_ABoVE_Aligned.
 writeVector(FMCH_vect, output_file, overwrite = TRUE)
 writeVector(FMCH_vect_historic, output_historic_file, overwrite = TRUE)
 
-
 # --- 3. DEFINE PROCESSING FUNCTION ---
 
 process_pft_year <- function(year, base_path, study_area_vect) {
