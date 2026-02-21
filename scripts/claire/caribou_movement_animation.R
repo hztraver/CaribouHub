@@ -5,14 +5,13 @@ library(dplyr)
 library(lubridate)
 library(viridis)
 
+library(terra)
 
 # Load data
 FMCH_eating <- read.csv("C:/Users/caeth/Documents/Data/Video Collar Data/dc_JANEdata_eating_modlocs.csv")
 FMCH_range <- st_read("C:/Users/caeth/Documents/Data/FMCH range shapefiles (from Mike Suitor)/Fortymile_Caribou_Expanded_Range_2013-2014_Final/Fortymile_Caribou_Expanded_Range_2013-2014_Final.shp")
 
-
-
-# --- STEP 1: SPATIAL ASSIGNMENT & PROJECTION ---
+# --- SPATIAL ASSIGNMENT & PROJECTION ---
 # Start with NAD83 (4269) for the raw decimal degrees
 FMCH_pts_sf <- st_as_sf(FMCH_eating, coords = c("x_", "y_"), crs = 4269)
 
@@ -20,7 +19,7 @@ FMCH_pts_sf <- st_as_sf(FMCH_eating, coords = c("x_", "y_"), crs = 4269)
 FMCH_range_3338 <- st_transform(FMCH_range, 3338)
 FMCH_pts_3338   <- st_transform(FMCH_pts_sf, 3338)
 
-# --- STEP 2: FIX THE 275-MILE DISPARITY ---
+# --- FIX THE 275-MILE DISPARITY ---
 range_center  <- st_centroid(st_union(FMCH_range_3338))
 points_center <- st_centroid(st_union(FMCH_pts_3338))
 
@@ -32,7 +31,7 @@ FMCH_pts_corrected <- FMCH_pts_3338
 st_geometry(FMCH_pts_corrected) <- st_geometry(FMCH_pts_3338) + c(shift_x, shift_y)
 st_crs(FMCH_pts_corrected) <- 3338 
 
-# --- STEP 3: PREP FOR ANIMATION ---
+# --- PREP FOR ANIMATION ---
 FMCH_ready <- FMCH_pts_corrected %>%
   mutate(
     year = year(t_),
@@ -42,7 +41,7 @@ FMCH_ready <- FMCH_pts_corrected %>%
   ) %>%
   st_drop_geometry()
 
-# --- STEP 4: ANIMATION FUNCTION ---
+# --- ANIMATION FUNCTION ---
 animate_fmch <- function(target_year) {
   
   plot_data <- FMCH_ready %>% filter(year == target_year)
@@ -51,7 +50,9 @@ animate_fmch <- function(target_year) {
     # Background Range
     geom_sf(data = FMCH_range_3338, fill = "gray95", color = "gray80") +
     
-    # Points colored by Elevation
+
+    
+    # Points coloured by Elevation
     geom_point(data = plot_data, 
                aes(x = easting, y = northing, color = elev, group = id), 
                size = 2.5, alpha = 0.8) +
