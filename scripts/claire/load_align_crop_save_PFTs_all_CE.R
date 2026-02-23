@@ -42,7 +42,6 @@ output_historic_file <- file.path(save_path, "FMCH_Range_Historic_ABoVE_Aligned.
 writeVector(FMCH_vect, output_file, overwrite = TRUE)
 writeVector(FMCH_vect_historic, output_historic_file, overwrite = TRUE)
 
-
 # --- 3. DEFINE PROCESSING FUNCTION ---
 
 process_pft_year <- function(year, base_path, study_area_vect) {
@@ -107,3 +106,14 @@ pft_2020 <- rast("Clipped_PFT_Data/PFT_masked_2020.tif")
 
 # Plot the whole stack (all layers at once)
 plot(pft_2020)
+
+# 1. Subset the specific layers
+# Double-check these names match names(pft_2020) exactly
+selected_layers <- pft_2020[[c("DeciduousShrub", "tmLichenLight")]]
+
+# 2. Rotate 90 degrees counterclockwise 
+# Use trans() to swap axes, then flip() vertically
+rotated_layers <- flip(trans(selected_layers), direction="vertical")
+
+# 3. Plot
+plot(rotated_layers, nc=2)
