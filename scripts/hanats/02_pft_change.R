@@ -85,27 +85,3 @@ for (time in time.periods) {
 }
 
 write.csv(dt, "E:/Caribou/pft_clipped/porcupine_pft_percent_change.csv")
-
-#### Figure showing overall change in PFT across ranges
-library(ggplot2)
-library(tidyr)
-
-# dt = read.csv("E:/Caribou/pft_clipped/porcupine_pft_percent_change.csv") 
-dt.long = pivot_longer(dt, cols = starts_with("percent_cover"), names_to = "Year", values_to = "Percent_cover")
-dt.long$Year = as.numeric(gsub("percent_cover_", "", dt.long$Year))
-dt.long$range = as.factor(dt.long$range)
-levels(dt.long$range) <- c("Summer", "Total", "Winter") 
-
-# set colors for plot
-pft_colors = c("#BCEE68", "#008B00", "#FF8C00", "#8B4513", "#104E8B", "#00B2EE", "#FFC125")
-
-ggplot(data = dt.long[!dt.long$range == "Total",], aes(x = Year, y = Percent_cover, colour = PFT))+
-  geom_point(size = 2.5)+
-  scale_color_manual(values = pft_colors)+
-  geom_line(alpha = 0.4)+
-  facet_wrap(~range)+
-  xlab("Year")+
-  ylab("Percent cover")+
-  theme_bw()+
-  theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14),
-        strip.text = element_text(size = 12))
