@@ -44,25 +44,32 @@ diff_summary$Range <- "Fortymile_Expanded_Range"
 print("Mean Percent Cover Change (1985 to 2020):")
 print(diff_summary)
 
-# --- 5. SIMPLE PLOT (Balanced Shared Scale) ---
+# --- 5. PREPARE SHARED SCALE LIMITS ---
 
-# 1. Determine the global range of values to ensure identical scales
-# We find the max absolute value to keep zero in the center
+# Calculate the global maximum absolute value across both layers 
+# This ensures 0 is always the "white" middle point
 max_val <- max(abs(minmax(pft_diff)), na.rm = TRUE)
-shared_range <- c(-max_val, max_val)
+shared_min <- -max_val
+shared_max <-  max_val
 
-# 2. Define a diverging color palette (Red = Decrease, White = No Change, Blue = Increase)
-# You can swap "blue" and "red" depending on which direction you want to emphasize
-diff_cols <- colorRampPalette(c("red", "white", "blue"))(100)
+message("To scale these the same in ArcGIS, use these limits:")
+message("Minimum: ", shared_min)
+message("Maximum: ", shared_max)
 
-# 3. Plot with the shared scale
-plot(pft_diff, 
-     main = c("Deciduous Shrub Change (1985-2020)", 
-              "Lichen Light Change (1985-2020)"),
-     range = shared_range,  # This forces the same scale limits
-     col = diff_cols,       # This applies the same colors
-     nc = 2)                # Forces plots to be side-by-side (2 columns)
+# --- 6. SAVE RESULTS FOR ARCGIS ---
 
-# --- 6. SAVE RESULTS ---
-writeRaster(pft_diff, file.path(output_dir, "PFT_Difference_1985_2020_900m.tif"), overwrite = TRUE)
+# 1. Save Shrub Change
+# We use 'clamp' to ensure no values fall outside our shared limits
+shrub_export <- clamp(pft_diff[["Diff_DeciduousShrub"]], shared_min, shared_max)
+writeRaster(shrub_export, 
+            filename = file.path(output_dir, "Shrub_Percent_Change_1985_2020.tif"), 
+            overwrite = TRUE)
+
+# 2. Save Lichen Change
+lichen_export <- clamp(pft_diff[["Diff_tmLichenLight"]], shared_min, shared_max)
+writeRaster(lichen_export, 
+            filename = file.path(output_dir, "Lichen_Percent_Change_1985_2020.tif"), 
+            overwrite = TRUE)
+
+# 3. Save the summary statistics
 write.csv(diff_summary, file.path(output_dir, "FMCH_PFT_Change_Summary_1985_2020.csv"), row.names = FALSE)
