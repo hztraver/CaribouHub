@@ -90,6 +90,34 @@ dt %>% group_by(YEAR) %>%
             mean_area = mean(AREA_KM, na.rm=T),
             se_area = sd(AREA_KM, na.rm=T) / mean(AREA_KM, na.rm=T),
             mean_nn_dist = mean(NEAR_DIST),
-            mean_shape = mean(SHAPE))
+            mean_shape = mean(SHAPE),
+            se_shape = sd(SHAPE) / mean(SHAPE))
 
-### Intersect with fire history
+### Intersect lichen 1985 with fire history
+fires = vect("D:/CaribouShapefiles/_Fire_history_merged/Fires_AK_YK.shp")
+l20 = vect("E:/Caribou/pft_clipped/Porcupine/patches/winterrange_2020_patches.shp", what = "geoms") %>% project(., fires)
+l85 = vect("E:/Caribou/pft_clipped/Porcupine/patches/winterrange_1985_patches.shp", what = "geoms") %>% project(., fires)
+
+# Area of new lichen patches
+gain = erase(l20, l85)
+sum(expanse(gain, unit = "km"))
+length(gain)
+
+# Area of lichen patch losses
+loss = erase(l85, l20)
+sum(expanse(loss, unit = "km"))
+length(loss)
+
+# Intersection of losses with fires
+fl = terra::intersect(loss, fires)
+fl$INTERSECT_AREA = expanse(fl, unit = "km")
+# total area in fires
+sum(fl$INTERSECT_AREA)
+fl$FIRE_YEAR = as.numeric(fl$FIRE_YEAR)
+
+year_labels = c("1940-1985", "1985-2000", "2000-2015", "2015-2025")
+dt = fl %>% values() %>% as.data.table() %>%
+  mutate(year_class = cut(FIRE_YEAR, breaks = c(1940, 1985, 2000 , 2015, 2025), labels = year_labels))
+
+## Lichen patch losses in fires by fire year
+dt %>% group_by(year_class) %>% summarise(area_in_fire = sum(INTERSECT_AREA, na.rm=T))
