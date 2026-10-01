@@ -14,6 +14,9 @@
 
 # Output files from R CMD build
 /*.tar.gz
+/*.tif
+/*.tif.aux.xml
+/*.csv
 
 # Output files from R CMD check
 /*.Rcheck/
@@ -49,3 +52,9 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# files to ignore
+data/orthomosaics/sixtymile_rgb_ortho_2018.tif
+data/orthomosaics/sixtymile_rgb_ortho_2018.tif.aux.xml
+data/orthomosaics/sixtymile_rgb_ortho_2025.tif
+data/orthomosaics/sixtymile_rgb_ortho_2025.tif.aux.xml

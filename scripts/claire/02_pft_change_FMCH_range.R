@@ -3,7 +3,7 @@ library(data.table)
 library(ggplot2)
 
 # --- 1. SETTINGS & PATHS ---
-root_path  <- "C:/Users/caeth/Documents/Data/ABOVE PFT 2005-2020/AK_Yukon_PFT_TopCover_2032_1.1-20260222_205533"
+root_path  <- "C:/Users/caeth/Documents/Data/ABOVE PFT 2005-2020"
 output_dir <- file.path(root_path, "Clipped_PFT_Data")
 setwd(root_path)
 
