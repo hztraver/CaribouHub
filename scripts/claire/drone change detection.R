@@ -1,7 +1,7 @@
 library(terra)
 library(tidyverse)
 
-raster_files <- list.files(path = "C:/Data/Drone data/Classified Orthos", 
+raster_files <- list.files(path = "C:/Data/Drone/Classified Orthos", 
                            pattern = "\\.tif$", 
                            full.names = TRUE)
 
@@ -66,3 +66,34 @@ cover_change <- all_cover_data %>%
 cover_change
 
 #test changes
+
+library(ggplot2)
+library(scales)
+
+# Define exact hex colors matching your reference image categories
+pft_colors <- c(
+  "Lichen"         = "#c7e9c4", # Gold / Yellow
+  "Shrub"          = "#31a354", # Tall Shrub / Green (adjust name if using "Tall Shrub")
+  "low vegetation" = "#fec44f", # Map to low shrub or match your category name
+  "Barren"         = "#bdbdbd", # Grey (or add any missing classes)
+  "Water"          = "#41b6c4"  # Blue
+)
+
+ggplot(cover_change, aes(x = site, y = change_percent, fill = pft_name)) +
+  geom_col(position = position_dodge(preserve = "single"), width = 0.7, color = "black") +
+  scale_fill_manual(values = pft_colors) +
+  labs(
+    title = "Percent Change in PFT Cover (2018/19 to 2025/26)",
+    x = "Site",
+    y = "Percent Change",
+    fill = "PFT Class"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    axis.text.x = element_text(face = "bold"),
+    axis.text.y = element_text(face = "bold"),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40")
+
