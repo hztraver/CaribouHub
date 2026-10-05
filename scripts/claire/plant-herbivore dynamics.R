@@ -10,7 +10,7 @@ library(brms)
 # 1. SPATIAL DATA PROCESSING
 # =========================================================
 # Load classified orthos
-raster_files <- list.files(path = "C:/Data/Drone data/Classified Orthos", 
+raster_files <- list.files(path = "C:/Data/Drone/Classified Orthos", 
                            pattern = "\\.tif$", 
                            full.names = TRUE)
 
@@ -162,7 +162,7 @@ ggplot(model_data %>% filter(!is.na(pft_name)),
   geom_smooth(method = "lm", alpha = 0.2, linewidth = 1.2) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black", alpha = 0.5) +
   facet_wrap(~pft_name, scales = "free_y") +
-  theme_minimal(base_size = 14) +
+  theme_classic(base_size = 14) +
   theme(legend.position = "none") +
   labs(
     title = "Impact of Foraging Residence Time on PFT Change",
