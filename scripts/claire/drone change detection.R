@@ -79,11 +79,17 @@ pft_colors <- c(
   "Water"          = "#41b6c4"  # Blue
 )
 
-ggplot(cover_change, aes(x = site, y = change_percent, fill = pft_name)) +
+library(dplyr)
+
+cover_change |>
+  # Filter to keep only shrub and lichen classes 
+  # (Be sure to update "Shrub" and "Lichen" to match the exact strings in your pft_name column if needed)
+  filter(pft_name %in% c("Shrub", "Lichen")) |>
+  ggplot(aes(x = site, y = change_percent, fill = pft_name)) +
   geom_col(position = position_dodge(preserve = "single"), width = 0.7, color = "black") +
   scale_fill_manual(values = pft_colors) +
   labs(
-    title = "Percent Change in PFT Cover (2018/19 to 2025/26)",
+    title = "Percent Change in Shrub and Lichen Cover",
     x = "Site",
     y = "Percent Change",
     fill = "PFT Class"
@@ -96,4 +102,3 @@ ggplot(cover_change, aes(x = site, y = change_percent, fill = pft_name)) +
     panel.grid.minor = element_blank()
   ) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40")
-
