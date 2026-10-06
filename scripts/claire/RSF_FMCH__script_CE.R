@@ -310,3 +310,56 @@ p_cover <- ggplot() +
     title = "Fortymile Caribou Environmental Predictors",
     theme = theme(plot.title = element_text(face = "bold", size = 14))
   )
+
+# Extract all conditional effects automatically from the brms model
+effects_list <- conditional_effects(RSF_bayes)
+
+# 1. Shrub Top Cover Plot (Now first)
+p_cover <- ggplot(effects_list$shrub_cover, aes(x = shrub_cover, y = estimate__)) +
+  geom_line(color = "hotpink", linewidth = 1.2) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), fill = "hotpink", alpha = 0.2) +
+  labs(
+    title = "Shrub Top Cover",
+    x = "Shrub Cover (Scaled)",
+    y = "Predicted Probability of Use"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 11), panel.grid = element_blank())
+
+# 2. Shrub Biomass (AGB) Plot (Now middle)
+p_agb <- ggplot(effects_list$shrub_AGB, aes(x = shrub_AGB, y = estimate__)) +
+  geom_line(color = "hotpink", linewidth = 1.2) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), fill = "hotpink", alpha = 0.2) +
+  labs(
+    title = "Shrub Biomass",
+    x = "Shrub AGB (Scaled)",
+    y = ""
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 11), panel.grid = element_blank())
+
+# 3. Elevation Plot (Now last)
+p_elev <- ggplot(effects_list$elevation, aes(x = elevation, y = estimate__)) +
+  geom_line(color = "hotpink", linewidth = 1.2) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), fill = "hotpink", alpha = 0.2) +
+  labs(
+    title = "Elevation",
+    x = "Elevation (Scaled)",
+    y = ""
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 11), panel.grid = element_blank())
+
+# Combine side-by-side using patchwork in the new order
+presentation_figure <- (p_cover | p_agb | p_elev) + 
+  plot_annotation(
+    title = "Caribou Habitat Selection Across Key Environmental Gradients",
+    subtitle = "Model-predicted probability of use based on Bayesian regression results",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 13),
+      plot.subtitle = element_text(size = 10)
+    )
+  )
+
+# Display the final reordered figure
+presentation_figure
