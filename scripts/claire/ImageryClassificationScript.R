@@ -169,14 +169,20 @@ ggsave("rf_var_plot.jpg",
 
 # varImpPlot(rf.model, type=1)
 
+# 1. Drop any rows in test_data that have NAs in your predictors
+test_data <- test_data %>% select(-Classcode)
+
 # Assess the model using the test data. Generate a confusion matrix.
-rf_pred <- predict(rf_model, test, type="response")
+rf_pred <- predict(rf_model, test_data, type="response")
 rf_pred <- as.data.frame(rf_pred)
-rf_pred$test <- test$Desc
-rf_confusion_matrix <- confusionMatrix(as.factor(rf_pred$test), as.factor(rf_pred$rf_pred))
+rf_pred$test_data <- test_data$Classname
+rf_confusion_matrix <- confusionMatrix(as.factor(rf_pred$test_data), as.factor(rf_pred$rf_pred))
+rf_confusion_matrix
+
+table_output <- "C:/Data"
 
 # Export model test data summaries
-if (enable_plotting == "yes") {
+if ("yes" == "yes") {
   write.csv(as.table(rf_confusion_matrix$table), paste(table_output, "/RF_confusion_matrix.csv", sep = ""), row.names = TRUE) # Export confusion matrix table
   write.csv(as.table(rf_confusion_matrix$byClass), paste(table_output, "/RF_class_measures.csv", sep = ""), row.names = TRUE) # Export confusion matrix table
   write.csv(as.table(rf_confusion_matrix$overall), paste(table_output, "/RF_overall_measures.csv", sep = ""), row.names = TRUE) # Export confusion matrix table
