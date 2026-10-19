@@ -38,7 +38,7 @@ raster_list <- list.files(input_data, pattern = "_arcprocessed\\.tif$", full.nam
 
 # Create raster stack from listed rasters
 # Revisit once we have the NIR and RE orthos prepped
-#raster_stack <- stack(raster_list)
+# raster_stack <- stack(raster_list)
 
 
 for (r_path in raster_list) {
@@ -125,29 +125,39 @@ rf_model <- randomForest(
 
 # Check error convergence
 plot(rf_model)
+rf_model
+
+# Assign band names
+band_labels <- c(
+  "Band_1" = "Blue Band",
+  "Band_2" = "Green Band",
+  "Band_3" = "Red Band",
+  "Band_4" = "NIR Band"
+)
 
 # Plot variable importance
 rf_importance <- as.data.frame(rf_model$importance)
 rf_importance$input_raster <- rownames(rf_importance)
 rf_importance$sd <- as.data.frame(rf_model$importanceSD)$MeanDecreaseAccuracy
-rf_importance <- rf_importance[order(rf_importance$MeanDecreaseAccuracy),]
-rf_importance$label <- c("AWI Wetland Type", "AWI Tree Cover", "50cm Panchromatic", "Blue Band", "NIR Band", "Green Band", "Red Band",  "NDVI")
 
-rf_var_plot <- ggplot(rf_importance, aes(y= reorder(label, -MeanDecreaseAccuracy), x= MeanDecreaseAccuracy)) +
-  geom_point() +
-  geom_errorbarh(aes(xmin = MeanDecreaseAccuracy-(sd*2), xmax = MeanDecreaseAccuracy+(sd*2)), linewidth=0.2, height=0.2) +
-  labs(x="Mean Decrease in Accuracy", y="Input Data") +
-  # scale_y_discrete(labels = c("AWI Wetland Type",
-  #                               "50cm Panchromatic",
-  #                               "AWI Tree Cover",
-  #                               "Blue Band",
-  #                               "NIR Band",
-  #                               "Green Band",
-  #                               "NDVI",
-  #                               "Red Band")) +
-  scale_x_continuous(breaks = seq(0, 0.2, by=0.05), limits=c(0, 0.2), expand=c(0,0)) +
+# Map labels securely by row name, then sort
+rf_importance$label <- band_labels[rownames(rf_importance)]
+rf_importance <- rf_importance[order(rf_importance$MeanDecreaseAccuracy), ]
+
+
+rf_var_plot <- ggplot(rf_importance, aes(y = reorder(label, MeanDecreaseAccuracy), x = MeanDecreaseAccuracy)) +
+  geom_point(size = 3) +
+  geom_errorbarh(aes(xmin = MeanDecreaseAccuracy - (sd * 2), 
+                     xmax = MeanDecreaseAccuracy + (sd * 2)), 
+                 linewidth = 0.4, 
+                 height = 0.2) +
+  labs(x = "Mean Decrease in Accuracy", y = "Input Data") +
   theme_bw() +
-  theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5,"cm"))
+  theme(
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+    axis.text.y = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 11)
+  )
 plot(rf_var_plot)
 
 ggsave("rf_var_plot.jpg",
