@@ -26,19 +26,44 @@ training_dir <- "C:/Data/Drone/Training Data"
 #enable_plotting <- "yes"
 # enable_plotting <- "no"
 
+
+###################################################################################################
+# align and stack rasters
+###################################################################################################
+
+
+rgb_path <- "C:/Data/Drone/Ethier_orthos_2025/swede_rgb_ortho.tif"
+
+rgb_rast <- rast(rgb_path)
+nir_rast <- rast("C:/Data/Drone/Ethier_orthos_2025/swede_ms_ortho.tif")
+chm_rast <- rast("C:/Data/Drone/CanopyHeightModels/output/RASTER/CHM_swede2025.tif")
+
+crs(chm_rast)
+crs(nir_rast)
+crs(rgb_rast)
+
+# clip and resample rasters to the same resolution before stacking
+nir_aligned <- resample(nir_rast, rgb_rast, method="bilinear")
+chm_aligned <- resample(chm_rast, rgb_rast, method="bilinear")
+
+#export the rasters
+nir_out <- "C:/Data/Drone/Processed_rasters/swede2025_ms_ortho_aligned.tif"
+chm_out <- "C:/Data/Drone/Processed_rasters/swede2025_chm_aligned.tif"
+
+writeRaster(nir_aligned, nir_out, overwrite = TRUE)
+writeRaster(chm_aligned, chm_out, overwrite = TRUE)
+
+
+# Create raster stack from listed rasters
+raster_stack <- stack(c(rgb_path, nir_out, chm_out))
+
+
 ###################################################################################################
 # Set up test and training data 
 ###################################################################################################
 
 # Create list of rasters in the 'input_data' folder
-raster_list <- list.files(input_data, pattern = "_arcprocessed\\.tif$", full.names = TRUE)
-
-# Remove unwanted rasters from the lsit 
-# raster.list <- raster.list[-1]
-
-# Create raster stack from listed rasters
-# Revisit once we have the NIR and RE orthos prepped
-# raster_stack <- stack(raster_list)
+raster_list <- list.files(input_data,  full.names = TRUE)
 
 
 for (r_path in raster_list) {
