@@ -99,10 +99,15 @@ opt_filter(NORM) = "-drop_z_below -.25 -drop_z_above 30"
 opt_output_files(NORM) = ""
 opt_progress(NORM) = TRUE
 
-# create a 1m CHM from the normalized point cloud using maximum canopy height
+# Create a 10cm CHM, expanding each point with a 10cm radius disc to fill holes
 plan(multisession, workers = 2L)
-CHM_max = pixel_metrics(NORM, res = 1, func = ~max(Z))
+CHM_max = rasterize_canopy(NORM, res = 0.1, algorithm = p2r(subcircle = 0.2))
 plan(sequential)
+
+# Set any pixel with a height greater than 3 meters to NA (empty)
+CHM_max[CHM_max > 3] <- NA
+
+plot(CHM_max, col = height.colors(50), main = "Canopy Height Model")
 
 # Export the CHM raster to a GeoTIFF file
 writeRaster(CHM_max, 
