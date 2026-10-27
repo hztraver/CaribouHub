@@ -36,19 +36,19 @@ rgb_path <- "C:/Data/Drone/Ethier_orthos_2025/swede_rgb_ortho.tif"
 
 rgb_rast <- rast(rgb_path)
 nir_rast <- rast("C:/Data/Drone/Ethier_orthos_2025/swede_ms_ortho.tif")
-chm_rast <- rast("C:/Data/Drone/CanopyHeightModels/output/RASTER/CHM_swede2025.tif")
+chm_rast <- rast("C:/Data/Drone/CanopyHeightModels/output/RASTER/CHM_max_swede2025.tif")
 
-crs(chm_rast)
-crs(nir_rast)
-crs(rgb_rast)
+nir_projected <- project(nir_rast, chm_rast, method = "bilinear")
+rgb_projected <- project(rgb_rast, chm_rast, method = "bilinear")
+
 
 # clip and resample rasters to the same resolution before stacking
-nir_aligned <- resample(nir_rast, rgb_rast, method="bilinear")
-chm_aligned <- resample(chm_rast, rgb_rast, method="bilinear")
+nir_aligned <- resample(nir_projected, rgb_projected, method="bilinear")
+chm_aligned <- resample(chm_rast, rgb_projected, method="bilinear")
 
 #export the rasters
-nir_out <- "C:/Data/Drone/Processed_rasters/swede2025_ms_ortho_aligned.tif"
-chm_out <- "C:/Data/Drone/Processed_rasters/swede2025_chm_aligned.tif"
+nir_out <- "C:/Data/Drone/Processed_rasters/swede2025_ms_aligned.tif"
+chm_out <- "C:/Data/Drone/Processed_rasters/swede2025_chm2_aligned.tif"
 
 writeRaster(nir_aligned, nir_out, overwrite = TRUE)
 writeRaster(chm_aligned, chm_out, overwrite = TRUE)
@@ -56,7 +56,6 @@ writeRaster(chm_aligned, chm_out, overwrite = TRUE)
 
 # Create raster stack from listed rasters
 raster_stack <- stack(c(rgb_path, nir_out, chm_out))
-
 
 ###################################################################################################
 # Set up test and training data 
@@ -66,33 +65,17 @@ raster_stack <- stack(c(rgb_path, nir_out, chm_out))
 raster_list <- list.files(input_data,  full.names = TRUE)
 
 
-for (r_path in raster_list) {
+
+# Load data
+r <- rast(r_path)
+training_polys <- read_sf("C:/Data/Drone/Training Data/swede2025_trainingdata.shp")
+ 
+# Extract pixel values
+extracted_data <- terra::extract(r, training_polys, xy = TRUE, df = TRUE)
   
-  # Parse year and site name
-  filename <- basename(r_path)
-  year <- str_extract(filename, "\\d{4}")
-  parts <- str_split(filename, "_")[[1]]
-  site_name <- parts[2]
-  
-  # Construct the matching training path
-  train_name <- paste0(site_name, year, "_trainingdata.shp")
-  train_path <- file.path(training_dir, train_name)
-  
-  # Skip if the training file doesn't exist
-  if (!file.exists(train_path)) {
-    warning(paste("Missing training data for:", train_name))
-    next 
-  }
-  
-  # Load data
-  r <- rast(r_path)
-  training_polys <- read_sf(train_path)
-  
-  # Extract pixel values
-  extracted_data <- terra::extract(r, training_polys, xy = TRUE, df = TRUE)
-  
-  print(paste0("Successfully processed: ", site_name, " (", year, ")"))
-}
+print(paste0("Successfully processed: ", site_name, " (", year, ")"))
+
+
 
 # Assign Raster Values to Training Data
 poly_attributes <- training_polys %>%
@@ -101,33 +84,13 @@ poly_attributes <- training_polys %>%
 
 combined_data <- extracted_data %>%
   left_join(poly_attributes, by = "ID") %>%
-  drop_na(Band_1, Band_2, Band_3, Band_4, Classname)
+  drop_na(Band_1, Band_2, Band_3, Band_4)
 
 # Split dataset into test and training data
 set.seed(123) 
 parts <- as.vector(createDataPartition(combined_data$Classname, p = 0.75, list = FALSE))
 train_data <- combined_data[parts, ]
 test_data <- combined_data[-parts, ]
-
-# Export test data shapefiles
-#if (enable_plotting == "yes") {
-#  TestData <- st_write(test, paste(vector_output, "/TestData_20231222.shp", sep = ""))
-#} else {
-#  print("Shapefile exporting currently disabled")
-#}
-
-# Export test and training data summary
-#test_data_summary <- test %>% dplyr::count(id, Desc)
-#training_data_summary <- train %>% dplyr::count(Desc)
-#data_summary <- merge(test_data_summary, training_data_summary, by="Desc")
-#names(data_summary) <- c("Class_desc", "Class_id", "test_count", "training_count")
-
-# Export data summary table
-#if (enable_plotting == "yes") {
-#  write.csv(data_summary, paste(table_output, "/data_summary.csv", sep = ""), row.names = TRUE)
-#} else {
-#  print("Table exporting currently disabled")
-#}
 
 ###################################################################################################
 # Random Forests Classification 
@@ -138,6 +101,8 @@ predictors <- c("Band_1", "Band_2", "Band_3", "Band_4")
 
 # Find the number of pixels in the smallest training class for balanced sampling
 min_n <- min(table(train_data$Classname))
+
+
 
 rf_model <- randomForest(
   x = train_data[, predictors], 

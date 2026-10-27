@@ -109,9 +109,7 @@ CHM_max[CHM_max > 3] <- NA
 
 plot(CHM_max, col = height.colors(50), main = "Canopy Height Model")
 
-project(CHM_max, "epsg:32607")
-
 # Export the CHM raster to a GeoTIFF file
 writeRaster(CHM_max, 
-            filename = paste0(dir, "/output/RASTER/CHM_swede2025.tif"), 
+            filename = paste0(dir, "/output/RASTER/CHM_max_swede2025.tif"), 
             overwrite = TRUE)
