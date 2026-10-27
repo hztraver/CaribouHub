@@ -169,7 +169,7 @@ ggsave("rf_var_plot.jpg",
 
 # varImpPlot(rf.model, type=1)
 
-# 1. Drop any rows in test_data that have NAs in your predictors
+# Drop Classcode column
 test_data <- test_data %>% select(-Classcode)
 
 # Assess the model using the test data. Generate a confusion matrix.
