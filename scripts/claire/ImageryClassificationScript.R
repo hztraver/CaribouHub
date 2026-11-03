@@ -12,7 +12,7 @@ library(tidyverse)
 input_data <- "C:/Data/Drone/2018-2026 Orthos"
 
 # Set location of training data shapefiles
-training_dir <- "C:/Data/Drone/Training Data"
+training_dir <- "C:/Data/Drone/TrainingData"
 
 enable_plotting = "yes"
 
@@ -23,11 +23,11 @@ output_data <- "C:/Data/Drone/ClassifiedOrthos/swede2025_classified.tif"
 # align and stack rasters
 ###################################################################################################
 
-rgb_path <- "C:/Data/Drone/Ethier_orthos_2025/swede_rgb_ortho.tif"
+rgb_path <- "C:/Data/Drone/EthierOrthos/swede_rgb_ortho.tif"
 
 rgb_rast <- rast(rgb_path)[[1:3]]
-nir_rast <- rast("C:/Data/Drone/Ethier_orthos_2025/swede_ms_ortho.tif")[[3:4]]
-chm_rast <- rast("C:/Data/Drone/CanopyHeightModels/output/RASTER/CHM_max_swede2025.tif")
+nir_rast <- rast("C:/Data/Drone/EthierOrthos/swede_ms_ortho.tif")[[3:4]]
+chm_rast <- rast("C:/Data/Drone/CanopyHeightModels/output/RASTER/swede2025_CHM.tif")
 
 nir_projected <- project(nir_rast, chm_rast, method = "bilinear")
 rgb_projected <- project(rgb_rast, chm_rast, method = "bilinear")
@@ -38,20 +38,16 @@ nir_aligned <- resample(nir_projected, rgb_projected, method="bilinear")
 chm_aligned <- resample(chm_rast, rgb_projected, method="bilinear")
 
 #clip rasters to same extent
-cutline <- vect("C:/Data/Drone/Ethier_orthos_2025/ClipExtent_swede2025.shp")
+cutline <- vect("C:/Data/Drone/EthierOrthos/ClipExtent_swede2025.shp")
 
 nir_crop <- crop(nir_aligned, cutline, mask = TRUE)
 chm_crop <- crop(chm_aligned, cutline, mask = TRUE)
 rgb_crop <- crop(rgb_projected, cutline, mask = TRUE)
 
-ext(nir_crop)
-ext(chm_crop)
-ext(rgb_crop)
-
 #export the rasters
-nir_out <- "C:/Data/Drone/Processed_rasters/swede2025_ms_aligned4.tif"
-chm_out <- "C:/Data/Drone/Processed_rasters/swede2025_chm_aligned4.tif"
-rgb_out <- "C:/Data/Drone/Processed_rasters/swede2025_rgb_aligned5.tif"
+nir_out <- "C:/Data/Drone/ProcessedRasters/swede2025_ms_aligned9.tif"
+chm_out <- "C:/Data/Drone/ProcessedRasters/swede2025_chm_aligned9.tif"
+rgb_out <- "C:/Data/Drone/ProcessedRasters/swede2025_rgb_aligned9.tif"
 
 writeRaster(nir_crop, nir_out, overwrite = TRUE)
 writeRaster(chm_crop, chm_out, overwrite = TRUE)
@@ -70,7 +66,7 @@ list_rasters <- c(rgb_out, nir_out, chm_out)
 
 # Load data
 r <- rast(list_rasters) # your raster stack
-training_polys <- read_sf("C:/Data/Drone/Training Data/swede2025_trainingdata2.shp")
+training_polys <- read_sf("C:/Data/Drone/TrainingData/swede2025_trainingdata.shp")
 head(training_polys)
 head(r)
 

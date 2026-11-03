@@ -1,18 +1,11 @@
 #### EXAMPLE LIDR PROCESSING WORKFLOW ####
-
-#install.packages("lidR")
-#install.packages("future")
-#install.packages("RCSF")
-#install.packages("sp")
-#install.packages("raster")
-
 library(RCSF)
 library(sp)
 library(lidR)
 library(raster)
 library(future) # for parallel processing
 
-## create a folders to save outputs 
+## create a folder to save outputs 
 dir = paste0("C:/Data/Drone/CanopyHeightModels")
 
 dir.create(paste0(dir,"/output"))
@@ -21,7 +14,7 @@ dir.create(paste0(dir,"/output/NORM")) # normalized point cloud
 dir.create(paste0(dir,"/output/RASTER")) # rasterized DEM & CHM
 
 ## read in the LAS Catalog 
-LCT = readLAScatalog("C:/Data/Drone/PointClouds")
+LCT = readLAScatalog("C:/Data/Drone/PointClouds/swede2025") #update for the site you are analyzing
 
 #### GROUND CLASSIFICATION ####
 # classify ground/canopy from the filtered point cloud
@@ -30,9 +23,11 @@ LCT = readLAScatalog("C:/Data/Drone/PointClouds")
 ## options for reading in the LAS Catalog
 opt_chunk_buffer(LCT) = 10 # buffer each tile 10m
 opt_laz_compression(LCT) = TRUE # write output as .laz 
+
 # Point cloud thinning to speed things up by taking a random point within each 0.1m voxel
 # consider using higher/lower resolution voxel depending on point cloud density and computing power
 opt_filter(LCT) = "-thin_with_voxel 0.1" 
+
 # output naming convention will keep the tiling system
 opt_output_files(LCT) = paste0(dir, "\\output\\GROUND\\{*}_GROUND") 
 opt_progress(LCT) = TRUE
@@ -53,7 +48,7 @@ GROUND = classify_ground(LCT, algorithm = csf(
   iterations = 500L,
   time_step = 1)) 
 
-# alwasys stop the parallel processing!
+# always stop the parallel processing!
 plan(sequential)
 
 #### CREATE A DEM FROM THE GROUND CLASSIFIED POINTS ####
@@ -61,6 +56,7 @@ plan(sequential)
 # read in the LAS Catalog of GROUND classified points
 GROUND = readLAScatalog(folder = paste0(dir, "\\output\\GROUND\\"))
 opt_chunk_buffer(GROUND) = 15
+
 # drop noisy points below the ground
 opt_filter(GROUND) = "-drop_z_below -0.25"
 opt_output_files(GROUND) = "" # no LAS output
@@ -75,9 +71,11 @@ DEM = grid_terrain(GROUND, res = 1, knnidw(), full_raster = TRUE)
 
 # read the classified point cloud in with high-res parameters
 GROUND = readLAScatalog(folder = paste0(dir, "\\output\\GROUND\\"))
+
 # small buffer; we're just normalizing
 opt_chunk_buffer(GROUND) = 1
 opt_laz_compression(LCT) = TRUE
+
 # output normalized point cloud to NORM folder
 opt_output_files(GROUND) = paste0(dir, "\\output\\NORM\\{*}_NORM")
 opt_progress(GROUND) = TRUE
@@ -94,6 +92,7 @@ NORM = readLAScatalog(paste0(dir, "\\output\\NORM\\"))
 # no buffer
 opt_chunk_buffer(NORM) = 0
 opt_laz_compression(NORM) = TRUE
+
 # drop noisy points below the ground or floating in outer space
 opt_filter(NORM) = "-drop_z_below -.25 -drop_z_above 30"
 opt_output_files(NORM) = ""
@@ -111,5 +110,5 @@ plot(CHM_max, col = height.colors(50), main = "Canopy Height Model")
 
 # Export the CHM raster to a GeoTIFF file
 writeRaster(CHM_max, 
-            filename = paste0(dir, "/output/RASTER/CHM_max_swede2025.tif"), 
+            filename = paste0(dir, "/output/RASTER/swede2025_CHM.tif"), 
             overwrite = TRUE)
