@@ -16,23 +16,23 @@ library(lidR)
 library(future)
 
 # Source original script containing the drone classificaton functions
-source("C:/Users/caeth/Documents/CaribouHub/scripts/claire/DroneClassificationFunctionst.R") 
+source("C:/Users/caeth/Documents/CaribouHub/scripts/claire/DroneClassificationFunctions.R") 
 
 # ===================================================================
 # SET-UP SITE SPECIFIC FILES, INPUTS, & OUTPUTS
 # ===================================================================
-site_name <- "swede_2025"
+site_name <- "sixtymile_2025"
 enable_plots <- "yes"
 
 # Global Directory (Required because your CHM_model function calls 'dir' internally)
 dir <- "C:/Data/Drone/CanopyHeightModels"
 
 # Input Paths
-las_dir     <- "C:/Data/Drone/PointClouds/swede2025"
-rgb_path    <- "C:/Data/Drone/EthierOrthos/swede_rgb_ortho.tif"
-nir_path    <- "C:/Data/Drone/EthierOrthos/swede_ms_ortho.tif"
+las_dir     <- "C:/Data/Drone/PointClouds/sixtymile2025"
+rgb_path    <- "C:/Data/Drone/EthierOrthos/sixtymile_rgb_ortho.tif"
+nir_path    <- "C:/Data/Drone/EthierOrthos/sixtymile_ms_ortho.tif"
 clip_extent <- "C:/Data/Drone/EthierOrthos/ClipExtent_swede2025.shp"
-train_shp   <- "C:/Data/Drone/TrainingData/swede2025_trainingdata.shp"
+train_shp   <- "C:/Data/Drone/TrainingData/sixtymile2025_trainingdata.shp"
 
 # Output & Intermediate Paths
 chm_path    <- paste0(dir, "/output/RASTER/", site_name, "_CHM.tif")

@@ -31,108 +31,82 @@ output_data <- "C:/Data/Drone/ClassifiedOrthos/swede2025_classified.tif"
 ###################################################################
 #BUILD CHM FROM POINT CLOUD
 ###################################################################
-CHM_model <- function(LCT) {
-  #### GROUND CLASSIFICATION ####
+# Add 'dir' and 'site_name' as arguments
+CHM_model <- function(LCT, dir, site_name) {
+ 
+   #### GROUND CLASSIFICATION ####
   # classify ground/canopy from the filtered point cloud
   # using cloth simulation function
   
   ## options for reading in the LAS Catalog
-  opt_chunk_buffer(LCT) = 10 # buffer each tile 10m
-  opt_laz_compression(LCT) = TRUE # write output as .laz 
+  opt_chunk_buffer(LCT) = 10 
+  opt_laz_compression(LCT) = TRUE 
   
-  # Point cloud thinning to speed things up by taking a random point within each 0.1m voxel
-  # consider using higher/lower resolution voxel depending on point cloud density and computing power
   opt_filter(LCT) = "-thin_with_voxel 0.1" 
   
-  # output naming convention will keep the tiling system
-  opt_output_files(LCT) = paste0(dir, "\\output\\GROUND\\{*}_GROUND") 
+  # Now 'dir' is recognized as the text path you pass in
+  opt_output_files(LCT) = paste0(dir, "/output/GROUND/{*}_GROUND") 
   opt_progress(LCT) = TRUE
   
-  # set up and execute task in parallel (2 cores) 
   plan(multisession, workers = 2L)
   
-  # read in the LAS Catalog -> create new LAS Catalog of classified points called GROUND 
   GROUND = classify_ground(LCT, algorithm = csf(
-    # in case there are steep slopes 
     sloop_smooth = TRUE,
-    # minimum height threshold for canopy points
     class_threshold = 0.5,
-    # larger resolution = coarser DTM
     cloth_resolution = 1,
-    # rigidness of cloth - higher = more rigid
     rigidness = 3L,
     iterations = 500L,
     time_step = 1)) 
   
-  # always stop the parallel processing!
   plan(sequential)
   
   #### CREATE A DEM FROM THE GROUND CLASSIFIED POINTS ####
-  
-  # read in the LAS Catalog of GROUND classified points
-  GROUND = readLAScatalog(folder = paste0(dir, "\\output\\GROUND\\"))
+  GROUND = readLAScatalog(folder = paste0(dir, "/output/GROUND/"))
   opt_chunk_buffer(GROUND) = 15
   
-  # drop noisy points below the ground
   opt_filter(GROUND) = "-drop_z_below -0.25"
-  opt_output_files(GROUND) = "" # no LAS output
+  opt_output_files(GROUND) = "" 
   opt_progress(GROUND) = TRUE
   
-  # create a 1m DEM from the GROUND points 
-  # using k-nn inverse distance weighting interpolation
   DEM = grid_terrain(GROUND, res = 1, knnidw(), full_raster = TRUE)
   
   #### NORMALIZATION ####
-  # normalize the point cloud to the ground classified points
+  GROUND = readLAScatalog(folder = paste0(dir, "/output/GROUND/"))
   
-  # read the classified point cloud in with high-res parameters
-  GROUND = readLAScatalog(folder = paste0(dir, "\\output\\GROUND\\"))
-  
-  # small buffer; we're just normalizing
   opt_chunk_buffer(GROUND) = 1
   opt_laz_compression(LCT) = TRUE
   
-  # output normalized point cloud to NORM folder
-  opt_output_files(GROUND) = paste0(dir, "\\output\\NORM\\{*}_NORM")
+  opt_output_files(GROUND) = paste0(dir, "/output/NORM/{*}_NORM")
   opt_progress(GROUND) = TRUE
   
-  # normalize the point cloud to the GROUND points
-  # or alternatively to the rasterized DEM - a bit faster but less "exact"
-  # NORM = normalize_height(LCT, DEM, knnidw(), na.rm = TRUE)
   plan(multisession, workers = 2L)
   NORM = normalize_height(GROUND, knnidw(), na.rm = TRUE)
   plan(sequential)
   
   ## Create rasterized CHM from normalized point cloud
-  NORM = readLAScatalog(paste0(dir, "\\output\\NORM\\"))
-  # no buffer
+  NORM = readLAScatalog(paste0(dir, "/output/NORM/"))
+  
   opt_chunk_buffer(NORM) = 0
   opt_laz_compression(NORM) = TRUE
   
-  # drop noisy points below the ground or floating in outer space
   opt_filter(NORM) = "-drop_z_below -.25 -drop_z_above 30"
   opt_output_files(NORM) = ""
   opt_progress(NORM) = TRUE
   
-  # Create a 10cm CHM, expanding each point with a 50cm radius disc to fill holes
   plan(multisession, workers = 2L)
   CHM_max = rasterize_canopy(NORM, res = 0.10, algorithm = p2r(subcircle = 0.5))
   plan(sequential)
   
-  # Set any pixel with a height greater than 3 meters to NA (empty)
-  CHM_max[CHM_max > 3] <- NA
+  # Set any pixel with a height greater than 2.5 meters to NA
+  CHM_max[CHM_max > 2.5] <- NA
   
   plot(CHM_max, col = height.colors(50), main = "Canopy Height Model")
   
-  # Export the CHM raster to a GeoTIFF file
-  writeRaster(CHM_max, 
-              filename = paste0(dir, "/output/RASTER/swede2025_CHM.tif"), 
-              overwrite = TRUE)
+  # Use the site_name variable here instead of hardcoding "swede2025"
+  out_file <- paste0(dir, "/output/RASTER/", site_name, "_CHM.tif")
+  writeRaster(CHM_max, filename = out_file, overwrite = TRUE)
 }
 
-# test function
-LCT = readLAScatalog("C:/Data/Drone/PointClouds/swede2025") #update for the site you are analyzing
-CHM_model(LCT)
 
 ###################################################################
 #ALIGN, CLIP & STACK RASTERS
@@ -181,16 +155,6 @@ align_rasters <- function(nir_path, rgb_path, chm_path, clip_extent, out_dir, si
     
     }
 
-# test function
-
-rgb <- "C:/Data/Drone/EthierOrthos/swede_rgb_ortho.tif"
-nir <- "C:/Data/Drone/EthierOrthos/swede_ms_ortho.tif"
-chm <- "C:/Data/Drone/CanopyHeightModels/output/RASTER/swede2025_CHM.tif"
-cutline <-"C:/Data/Drone/EthierOrthos/ClipExtent_swede2025.shp"
-
-aligned_rasters <- align_rasters(nir, rgb, chm, cutline, "C:/Data/Drone/ProcessedRasters", "swede_2025")  #change site name!
-summary(aligned_rasters)
-
 ############################################################
 #SET-UP, SPLIT & TEST THE TRAINING DATA
 ############################################################
@@ -217,10 +181,6 @@ train_the_data <- function(aligned_rasters, training_polys){
   # Must return multiple objects as a list
   return(list(train = train_data, test = test_data))
 }
-
-#Test the function
-training_polys <- read_sf("C:/Data/Drone/TrainingData/swede2025_trainingdata.shp")
-trained_data <- train_the_data(aligned_rasters, training_polys)
 
 ###################################################################################################
 # Random Forests Classification 
@@ -251,10 +211,6 @@ train_rf_model <- function(train_data, predictors = c("Red", "Green", "Blue", "R
   return(rf_model)
 }
 
-#test RF function
-my_rf_model <- train_rf_model(trained_data$train)
-my_rf_model$confusion
-
 ###################################################################################################
 # map PFT classification
 ###################################################################################################
@@ -280,14 +236,3 @@ predict_rf_raster <- function(raster_stack, rf_model, output_file, enable_plotti
     return(NULL)
   }
 }
-
-# Define your output file path
-output_path <- "C:/Data/Drone/ClassifiedOrthos/swede2025_classified.tif"
-
-# Run the function
-classified_raster <- predict_rf_raster(
-  raster_stack = aligned_rasters, 
-  rf_model = my_rf_model, 
-  output_file = output_path, 
-  enable_plotting = "yes"
-)
