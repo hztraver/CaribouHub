@@ -13,22 +13,6 @@ library(lidR)
 library(future) # for parallel processing
 
 ###################################################################
-#SET-UP SITE SPECIFIC FILES, INPUTS, OUTPUTS, ETC.
-###################################################################
-
-# Set input rasters
-input_data <- "C:/Data/Drone/EthierOrthos" #for ethier orthos
-#input_data <- "C:/Data/Drone/OrndahlOrthos" #for orndahl orthos
-
-# Set training data shapefiles
-training_dir <- "C:/Data/Drone/TrainingData/swede2025_trainingdata.shp"
-
-enable_plotting = "yes"
-
-# Set location of swede2025_classified output raster
-output_data <- "C:/Data/Drone/ClassifiedOrthos/swede2025_classified.tif"
-
-###################################################################
 #BUILD CHM FROM POINT CLOUD
 ###################################################################
 # Add 'dir' and 'site_name' as arguments
@@ -107,7 +91,6 @@ CHM_model <- function(LCT, dir, site_name) {
   writeRaster(CHM_max, filename = out_file, overwrite = TRUE)
 }
 
-
 ###################################################################
 #ALIGN, CLIP & STACK RASTERS
 ###################################################################
@@ -115,8 +98,8 @@ CHM_model <- function(LCT, dir, site_name) {
 align_rasters <- function(nir_path, rgb_path, chm_path, clip_extent, out_dir, site_name) {
   # This function aligns three rasters by clipping, cropping and reprojecting
     
-    rgb_rast <- rast(rgb_path)[[1:3]]
-    nir_rast <- rast(nir_path)[[3:4]]
+    rgb_rast <- rast(rgb_path)
+    nir_rast <- rast(nir_path)
     chm_rast <- rast(chm_path)
     
     nir_projected <- project(nir_rast, chm_rast, method = "bilinear")

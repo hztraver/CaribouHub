@@ -21,18 +21,19 @@ source("C:/Users/caeth/Documents/CaribouHub/scripts/claire/DroneClassificationFu
 # ===================================================================
 # SET-UP SITE SPECIFIC FILES, INPUTS, & OUTPUTS
 # ===================================================================
-site_name <- "sixtymile_2025"
+site_name <- "sixtymile"
+year <- "2025"
 enable_plots <- "yes"
 
 # Global Directory (Required because your CHM_model function calls 'dir' internally)
 dir <- "C:/Data/Drone/CanopyHeightModels"
 
 # Input Paths
-las_dir     <- "C:/Data/Drone/PointClouds/sixtymile2025"
-rgb_path    <- "C:/Data/Drone/EthierOrthos/sixtymile_rgb_ortho.tif"
-nir_path    <- "C:/Data/Drone/EthierOrthos/sixtymile_ms_ortho.tif"
-clip_extent <- "C:/Data/Drone/EthierOrthos/ClipExtent_swede2025.shp"
-train_shp   <- "C:/Data/Drone/TrainingData/sixtymile2025_trainingdata.shp"
+las_dir     <- paste0("C:/Data/Drone/PointClouds/", site_name, year)
+rgb_path    <- paste0("C:/Data/Drone/EthierOrthos/", site_name, "_rgb_ortho.tif")
+nir_path    <- paste0("C:/Data/Drone/EthierOrthos/", site_name, "_ms_ortho.tif")
+clip_extent <- paste0("C:/Data/Drone/EthierOrthos/ClipExtent_", site_name, year, ".shp")
+train_shp   <- paste0("C:/Data/Drone/TrainingData/", site_name, year, "_trainingdata.shp")
 
 # Output & Intermediate Paths
 chm_path    <- paste0(dir, "/output/RASTER/", site_name, "_CHM.tif")
