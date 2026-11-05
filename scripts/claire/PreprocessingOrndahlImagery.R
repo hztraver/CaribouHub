@@ -31,19 +31,18 @@ library(terra)
 
 # Input Paths
 in_path <- "C:/Data/Drone/OrndahlOrthos/"
-site <- "BROWNSCREEK" #CHANGE THIS TO THE SITE YOU ARE PROCESSING
-year <- "2019" #CHANGE THIS TO THE YEAR YOU ARE PROCESSING
+siteyear <- "swede2019" #CHANGE THIS TO THE SITE YOU ARE PROCESSING
 
 # Output & Intermediate Paths
-rgb_out <- paste0("C:/Data/Drone/EthierOrthos/", site, year, "_rgb_ortho.tif")
-ms_out <- paste0("C:/Data/Drone/EthierOrthos/", site, year, "_ms_ortho.tif")
+rgb_out <- paste0("C:/Data/Drone/OrthosClean/", siteyear, "_rgb_ortho.tif")
+ms_out <- paste0("C:/Data/Drone/OrthosClean/", siteyear, "_ms_ortho.tif")
 
 #construct full file paths
-r_in    <- paste0(in_path, site, year, "_red.tif")
-g_in    <- paste0(in_path, site, year, "_green.tif")
-b_in    <- paste0(in_path, site, year, "_blue.tif")
-re_in   <- paste0(in_path, site, year, "_red edge.tif")
-nir_in   <- paste0(in_path, site, year, "_nir.tif")
+r_in    <- paste0(in_path, siteyear, "_red.tif")
+g_in    <- paste0(in_path, siteyear, "_green.tif")
+b_in    <- paste0(in_path, siteyear, "_blue.tif")
+re_in   <- paste0(in_path, siteyear, "_red edge.tif")
+nir_in   <- paste0(in_path, siteyear, "_nir.tif")
 
 #load R, G, B, NIR, RE orthos
 red <- rast(r_in)
