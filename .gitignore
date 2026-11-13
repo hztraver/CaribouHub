@@ -17,7 +17,7 @@
 /*.tif
 /*.tif.aux.xml
 /*.csv
-
+/*.jpeg
 # Output files from R CMD check
 /*.Rcheck/
 
