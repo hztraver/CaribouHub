@@ -1,53 +1,26 @@
 library(terra)
 
-#I have done this but uncomment if we need to for unprocessed sites
-#Rename Katie's orthos to match my (bad) naming structure. 
-#Rename Katie's files to match 2025/26 naming structure
-# Grab all files in the directory (both .tif and .tif.aux)
-#old_files <- list.files(in_path, full.names = TRUE)
-#
-#for (old_file in old_files) {
-#  file_name <- basename(old_file)
-#  
-#  # Only process files that match the long string
-#  if (grepl("transparent_reflectance", file_name)) {
-#    
-#    # Extract Site (as lowercase) and Year
-#    parts <- strsplit(file_name, "_")[[1]]
-#    site <- tolower(parts[1]) 
-#    year <- substr(parts[2], 1, 4)
-#    
-#    # Extract the Band and extension
-#    band_and_ext <- sub(".*reflectance_", "", file_name) 
-#    
-#    # Construct the clean name (e.g., brownscreek2019_red.tif)
-#    new_name <- paste0(site, year, "_", band_and_ext)
-#    new_file <- file.path(in_path, new_name)
-#    
-#    # Rename the file in place
-#    file.rename(from = old_file, to = new_file)
-#  }
-#}
-
 # Input Paths
 in_path <- "C:/Data/Drone/OrndahlOrthos/"
-siteyear <- "swede2019" #CHANGE THIS TO THE SITE YOU ARE PROCESSING
+site <- "WICKERSHAM_" #CHANGE THIS TO THE SITE YOU ARE PROCESSING
+year <- "2018" #CHANGE THIS TO THE YEAR YOU ARE PROCESSING
 
 # Output & Intermediate Paths
+siteyear <- "wickersham2018" #to follow 2025 naming structure
 rgb_out <- paste0("C:/Data/Drone/OrthosClean/", siteyear, "_rgb_ortho.tif")
 ms_out <- paste0("C:/Data/Drone/OrthosClean/", siteyear, "_ms_ortho.tif")
 
 #construct full file paths
-r_in    <- paste0(in_path, siteyear, "_red.tif")
-g_in    <- paste0(in_path, siteyear, "_green.tif")
-b_in    <- paste0(in_path, siteyear, "_blue.tif")
-re_in   <- paste0(in_path, siteyear, "_red edge.tif")
-nir_in   <- paste0(in_path, siteyear, "_nir.tif")
+r_in  <- list.files(path = in_path, pattern = paste0("^", site, year, ".*_red\\.tif$"), full.names = TRUE)
+g_in  <- list.files(path = in_path, pattern = paste0("^", site, year, ".*_green\\.tif$"), full.names = TRUE)
+b_in  <- list.files(path = in_path, pattern = paste0("^", site, year, ".*_blue\\.tif$"), full.names = TRUE)
+re_in <- list.files(path = in_path, pattern = paste0("^", site, year, ".*_red edge\\.tif$"), full.names = TRUE)
+nir_in <- list.files(path = in_path, pattern = paste0("^", site, year, ".*_nir\\.tif$"), full.names = TRUE)
 
 #load R, G, B, NIR, RE orthos
 red <- rast(r_in)
-green <- rast(g_in)
 blue <- rast(b_in)
+green <- rast(g_in)
 NIR <- rast(nir_in)
 RE <- rast(re_in)
 
